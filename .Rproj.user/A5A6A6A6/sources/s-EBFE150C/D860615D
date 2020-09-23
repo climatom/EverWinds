@@ -1,0 +1,23 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1583404959433.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "0",
+    "id" : "D860615D",
+    "lastKnownWriteTime" : 1583411190,
+    "last_content_update" : 1583411190931,
+    "path" : "~/Everest2019/Research/Weather/Code/horizon.r",
+    "project_path" : "horizon.r",
+    "properties" : {
+        "cursorPosition" : "20,1",
+        "scrollLine" : "0",
+        "tempName" : "Untitled1"
+    },
+    "relative_order" : 1,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}
