@@ -88,6 +88,7 @@ thresh=1 # Filter out hourly-mean winds < this value
 
 # Import the reanalysis
 fr="/home/lunet/gytm3/Everest2019/Research/Weather/Data/SouthCol_interpolated.nc"
+figdir="/home/lunet/gytm3/Everest2019/Research/Weather/Figures/"
 r=xr.open_dataset(fr).to_dataframe()
 ur=r["ws"]
 u_wnd=r["u_wnd"]
@@ -135,10 +136,13 @@ rat=ug_sub/ur_sub
 rrat=circ_stat(rat,wdir_sub,15,"median",5.)
 
 # Residual
+t,p=stats.ttest_ind(ug_sub[idx],ur_sub[idx])
 #idx=np.logical_and(idx,np.logical_and(wdir_sub>225,wdir_sub<315))
-resid=ug_sub[idx]-ur_sub[idx]
+resid=ug_sub[idx]-ur_sub[idx]; const=np.mean(resid)
+uncert=np.nanpercentile(np.abs(resid),95)
 # Bias correct?
-ur_sub=ur_sub+np.mean(resid)
+ur_sub_raw=ur_sub*1.
+ur_sub=ur_sub+const
 resid=ug_sub[idx]-ur_sub[idx]
 
 # Compute frequency
@@ -149,15 +153,17 @@ freq_pc=freq[1]/np.sum(freq[1])*100
 fig=plt.figure()
 fig.set_size_inches(7,6)
 ref=np.linspace(0,55,100)
-ax1=fig.add_subplot(222)
+ax1=fig.add_subplot(221)
 ax1.scatter(ur_sub,ug_sub,s=1,color='k')
 ax1.plot(ref,ref,color='red')
 ax1.grid()
 ax1.set_xlim([0,55])
 ax1.set_ylim([0,55])
+ax1.set_ylabel("Obs Gust (m s$^{-1}$)")
+ax1.set_xlabel("ERA5 (m s$^{-1}$)")
 
 # Plot horizon angle
-ax2=fig.add_subplot(221,projection="polar")
+ax2=fig.add_subplot(222,projection="polar")
 ax2.plot(np.radians(hang_plot[:,0]),hang_plot[:,1],color='k')
 ax2.set_theta_direction(-1)
 ax2.set_theta_direction(-1)
@@ -183,10 +189,40 @@ ax4.hist(resid,bins=30,facecolor='w',edgecolor='k')
 ax4.grid()
 ax4.set_xlim([-12,12])
 ax4.axvline(0,linestyle="--",color="red")
+ax4.set_xlabel("Residual (m s$^{-1}$)")
+ax4.set_ylabel("Frequency (hours)")    
+plt.tight_layout()
+fig.savefig(figdir+"Reanal_eval.tif",dpi=300)
 
 
+# How do the ECDFs look?
+ecdf_rc=ur_sub[idx][np.argsort(ur_sub[idx])]
+ecdf_r=ur_sub_raw[idx][np.argsort(ur_sub_raw[idx])]
+ecdf_g=ug_sub[idx][np.argsort(ug_sub[idx])]
+x=np.arange(np.sum(idx))/np.sum(idx).astype(np.float)
+fig,ax=plt.subplots(1,2)
+fig.set_size_inches(7,3)
+ax.flat[0].plot(ecdf_r.values[:],x,color="grey",linewidth=2,label="ERA5")
+ax.flat[0].plot(ecdf_g.values[:],x,color="black",linewidth=2,label="Obs Gust")
+ax.flat[0].legend()
+ax.flat[0].set_ylim([0,1.01])
+ax.flat[0].set_xlim([0,55])
+ax.flat[0].grid()
+ax.flat[0].set_ylabel("ECDF")
+ax.flat[0].set_xlabel("Wind Speed (m s$^{-1}$)")
 
+k=ecdf_g-ecdf_r
+ax.flat[1].scatter(x,k,color="black",s=1)
+ax.flat[1].grid()
+ax.flat[1].set_ylabel("k (m s$^{-1}$)")
+ax.flat[1].set_xlabel("q")
+ax.flat[1].set_xlim([0,1])
+ax.flat[1].axhline(const,color='r')
+plt.tight_layout()
+fig.savefig(figdir+"Reanal_ECDF.tif",dpi=300)
 
+# Uncertainty range
+uncert=np.nanpercentile(resid,95)
 
 
 
