@@ -493,12 +493,9 @@ dang_doy=dang.groupby(dang.index.dayofyear).sum()/\
 (ref.groupby(ref.index.dayofyear).sum().astype(np.float))*100.
 seas_prob=seas_cycle(np.arange(len(dang_doy)),366.,dang_doy,ncycles=4)
 
-# Mean wind
-seas_mean=seas_cycle(np.arange(len(ymean)),366.,ymean,ncycles=4)
-
 fig=plt.figure()
-fig.set_size_inches(5,5)
-ax=fig.add_subplot(111,projection="polar")
+fig.set_size_inches(8,4)
+ax=fig.add_subplot(121,projection="polar")
 ax.set_theta_direction(-1)
 ax.set_theta_direction(-1)
 ax.set_theta_zero_location("N")
@@ -525,8 +522,23 @@ ax.legend(loc='best', bbox_to_anchor=(0.5, 0.1, 0.2, 0.2))
 x_ref=np.arange(1,367)/366.*(np.pi*2)
 ax.plot(x_ref,seas_prob,linestyle='--',color='k')
 ax.plot(x_ref,seas_mean,color='k')
+
+# PLot histograms -- difference from "normal"
+resid_all=all_above_winds-np.mean(recon)
+resid_matched=np.zeros(len(resid_all))
+for i in range(len(resid_all)):
+    resid_matched[i]=all_above_winds[i]-\
+    seas_mean[all_above_winds.index.dayofyear[i]-1]
+ax=fig.add_subplot(122)
+ax.hist(resid_all,bins=30,edgecolor="k")
+ax.hist(resid_matched,bins=30,alpha=0.4,edgecolor='k')
+ax.axvline(np.mean(resid_all),linewidth=3,color='k',linestyle='--')
+ax.axvline(np.mean(resid_matched),linewidth=3,color='k',linestyle='--')
+ax.grid()
+ax.set_xlabel("Residual ( m s$^{-1}$)")
+ax.set_ylabel("Count")
+plt.tight_layout()
 fig.savefig(figdir+"Mountaineers_Wind.tif",dpi=300)
-
-
+#resid_paired=recon
 
 
