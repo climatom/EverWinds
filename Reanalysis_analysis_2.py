@@ -139,7 +139,11 @@ rrat=circ_stat(rat,wdir_sub,15,"median",5.)
 t,p=stats.ttest_ind(ug_sub[idx],ur_sub[idx])
 #idx=np.logical_and(idx,np.logical_and(wdir_sub>225,wdir_sub<315))
 resid=ug_sub[idx]-ur_sub[idx]; const=np.mean(resid)
-uncert=np.nanpercentile(np.abs(resid),95)
+resid_new=ug_sub[idx]-(ur_sub[idx]+const)
+uncert=np.nanpercentile(np.abs(resid_new),95)
+lower_thresh=np.percentile(resid_new[np.argsort(resid_new)],2.5)
+upper_thresh=np.percentile(resid_new[np.argsort(resid_new)],97.5)
+
 # Bias correct?
 ur_sub_raw=ur_sub*1.
 ur_sub=ur_sub+const
@@ -188,9 +192,11 @@ ax4=fig.add_subplot(224)
 ax4.hist(resid,bins=30,facecolor='w',edgecolor='k')
 ax4.grid()
 ax4.set_xlim([-12,12])
-ax4.axvline(0,linestyle="--",color="red")
+ax4.axvline(0,linestyle="-",color="red")
 ax4.set_xlabel("Residual (m s$^{-1}$)")
 ax4.set_ylabel("Frequency (hours)")    
+ax4.axvline(lower_thresh,color='red',linestyle="--")
+ax4.axvline(upper_thresh,color='red',linestyle="--")
 plt.tight_layout()
 fig.savefig(figdir+"Reanal_eval.tif",dpi=300)
 
