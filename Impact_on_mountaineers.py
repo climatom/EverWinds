@@ -218,9 +218,8 @@ def clusters(dates,threshold,max_ht):
         # Drop var for this iteration
         inds=inds[inds != i]
         # Difference with all others
-        delta=dates[i]-dates[inds]
+        dm=np.abs((dates[i]-dates[inds])/np.timedelta64(1,'s')/const)
         # Take min. 
-        dm=np.abs([ii.total_seconds()/const for ii  in delta]); 
         
         # If yes, we have another match somewhere     
         if np.min(dm) <=threshold:          
@@ -541,4 +540,46 @@ plt.tight_layout()
 fig.savefig(figdir+"Mountaineers_Wind.tif",dpi=300)
 #resid_paired=recon
 
+# Examine the (3) individual climbs in detail (part of subset of 5)
+# For the 1982-12-27/8 climb we have two entries: only take one
+excl_date=datetime.datetime(year=1982,month=12,day=28,hour=6)
+select=all_above_winds.loc[all_above_winds >= 35]
+select=select.append(all_above_winds.loc[all_above_winds.index==\
+                                  datetime.datetime(year=1993,\
+                                  month=12,day=22,hour=6)])
+select=select.loc[select.index!=excl_date]
+td=datetime.timedelta(days=1)
+fig,ax=plt.subplots(3,1)
+fig.set_size_inches(5,8)
+fmt=mdates.DateFormatter("%d/%m/%y T%H")
+key_dates=[[datetime.datetime(year=1982,month=12,day=27,hour=16,minute=0),\
+            datetime.datetime(year=1982,month=12,day=27,hour=19,minute=30)],\
+            [],\
+            [],\
+            [datetime.datetime(year=1993,month=12,day=20,hour=9,minute=25),\
+             datetime.datetime(year=1993,month=12,day=20,hour=10,minute=40)],
+            [datetime.datetime(year=1993,month=12,day=22,hour=9,minute=0),\
+             datetime.datetime(year=1993,month=12,day=22,hour=11,minute=20)]]
+count=0
+for i in range(5):
+    st=select.index[i]-td
+    stp=select.index[i]+td
+    y=recon.loc[st:stp]
+    if i == 0 or i >2:
+        axi=ax.flat[count]
+        axi.plot(y.index[:],y.values[:],color="k")
+        axi.fill_between(y.index[:],y.values[:]+lower_thresh,y.values[:]\
+               +upper_thresh,color='grey',alpha=0.25)
+        axi.set_xlim([y.index.min(),y.index.max()])
+        ticks=axi.get_xticks()
+        ticks=ticks[1:-1:3]
+        axi.set_xticks(ticks)
+        axi.xaxis.set_major_formatter(fmt)
+        axi.grid()
+        axi.set_ylim([0,55])
+        axi.axhline(30,color='red')
+        axi.axvspan(key_dates[i][0],key_dates[i][1],color="k",alpha=0.5)
+        if count == 1: axi.set_ylabel("Wind Gust (m s$^{-1}$)")
+        count+=1
 
+fig.savefig(figdir+"Query_gusts.tif",dpi=300)
